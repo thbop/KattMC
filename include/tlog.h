@@ -8,7 +8,8 @@
 #include "stdbool.h"
 #include "string.h"
 
-#define TLOG_MAX_MSG_SIZE 64
+#define TLOG_MAX_MSG_SIZE   64
+#define TLOG_TIMESTAMP_SIZE 8
 
 // Example:
 //     logs/2025-03-03.log
@@ -34,6 +35,8 @@ bool TLogInit() {
 void TLog( const char *fmt, ... ) {
     va_list args;
     va_start(args, fmt);
+
+    
     vprintf(fmt, args);
 
     char message[TLOG_MAX_MSG_SIZE] = {0};
