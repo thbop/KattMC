@@ -23,6 +23,8 @@
     #include <unistd.h>
     typedef int sock_t;
     #define CLOSESOCKET close
+    #define INVALID_SOCKET -1
+    #define SOCKET_ERROR   -1
 #endif
 
 void GPTSOCK_Init() {
@@ -32,8 +34,19 @@ void GPTSOCK_Init() {
 #endif
 }
 
+void GPTSOCK_Clean() {
+#ifdef _WIN32
+    WSACleanup();
+#endif
+}
+
 sock_t GPTSOCK_socket() {
-    return socket(AF_INET, SOCK_STREAM, 0);
+    sock_t sock = socket(AF_INET, SOCK_STREAM, 0);
+    if ( sock == INVALID_SOCKET ) {
+        TLog("GPTSOCK ERROR: Failed to create socket!\n");
+        GPTSOCK_Clean();
+    }
+    return sock;
 }
 
 int GPTSOCK_bind(sock_t sock, int port) {
@@ -41,7 +54,14 @@ int GPTSOCK_bind(sock_t sock, int port) {
     server.sin_family = AF_INET;
     server.sin_port = htons(port);
     server.sin_addr.s_addr = INADDR_ANY;
-    return bind(sock, (struct sockaddr*)&server, sizeof(server));
+
+    int result = bind(sock, (struct sockaddr*)&server, sizeof(server));
+    if (result == SOCKET_ERROR) {
+        TLog("GPTSOCK ERROR: Failed to bind socket to port %d!\n", port);
+        GPTSOCK_Clean();
+    }
+
+    return result;
 }
 
 int GPTSOCK_listen(sock_t sock, int backlog) {
@@ -51,7 +71,14 @@ int GPTSOCK_listen(sock_t sock, int backlog) {
 sock_t GPTSOCK_accept(sock_t sock) {
     struct sockaddr_in client;
     int client_size = sizeof(client);
-    return accept(sock, (struct sockaddr*)&client, &client_size);
+
+    sock_t clientSock = accept(sock, (struct sockaddr*)&client, &client_size);
+    if ( sock == INVALID_SOCKET ) {
+        TLog("GPTSOCK ERROR: Failed to accept client!\n");
+        GPTSOCK_Clean();
+    }
+
+    return clientSock;
 }
 
 int GPTSOCK_connect(sock_t sock, const char *ip, int port) {
