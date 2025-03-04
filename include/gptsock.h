@@ -89,9 +89,10 @@ int GPTSOCK_connect(sock_t sock, const char *ip, int port) {
     return connect(sock, (struct sockaddr*)&server, sizeof(server));
 }
 
-int GPTSOCK_send(sock_t sock, const char *data) {
-    return send(sock, data, strlen(data), 0);
+int GPTSOCK_send(sock_t sock, const char *data, int len) {
+    return send(sock, data, len, 0);
 }
+
 
 int GPTSOCK_recv(sock_t sock, char *buffer, int size) {
     return recv(sock, buffer, size, 0);
