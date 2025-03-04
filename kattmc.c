@@ -3,6 +3,7 @@
 
 #include "tlog.h"
 #include "gptsock.h"
+#include "notchtypes.h"
 
 
 sock_t serverSock;
@@ -15,6 +16,7 @@ bool Init() {
 
     serverSock = GPTSOCK_socket();
     GPTSOCK_bind(serverSock, 25565);
+
 
     return ok;
 }
@@ -35,10 +37,13 @@ void Run() {
         GPTSOCK_send(clientSock, res, 5);
 
         memset(buffer, 0, GPTSOCK_BUFFER_SIZE);
-        len = GPTSOCK_recv(clientSock, buffer, GPTSOCK_BUFFER_SIZE);
-        printf("%d\n", len);
+        GPTSOCK_recv(clientSock, buffer, GPTSOCK_BUFFER_SIZE);
         GPTSOCK_print(buffer, len);
 
+        char login[16] = { 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+        GPTSOCK_send(clientSock, login, 16);
+        
+        
         char kick[13] = { 0xFF, 0, 5, 0, 'H', 0, 'e', 0, 'l', 0, 'l', 0, 'o' };
         GPTSOCK_send(clientSock, kick, 13);
 
@@ -55,7 +60,7 @@ void Close() {
 int main() {
     if ( !Init() )
         return 1;
-    Run();
+    // Run();
     Close();
 
     return 0;
