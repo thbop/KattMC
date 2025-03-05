@@ -17,6 +17,17 @@ bool Init() {
     serverSock = GPTSOCK_socket();
     GPTSOCK_bind(serverSock, 25565);
 
+    nstring16 *msg = toNotch(NOTCHTYPE_STRING16, L"Hello World!");
+
+    NotchTypePrintStr(NOTCHTYPE_STRING16, msg);
+
+    wchar *message = fromNotch(NOTCHTYPE_STRING16, msg);
+    printf("\n");
+    wprint(message);
+    printf("\n");
+    free(message);
+    NotchTypeFreeStr(NOTCHTYPE_STRING16, msg);
+
 
     return ok;
 }
