@@ -4,29 +4,19 @@
 #include "tlog.h"
 #include "gptsock.h"
 #include "notchtypes.h"
+#include "packet.h"
 
 
 sock_t serverSock;
 
 bool Init() {
     bool ok = true;
-    TLog("SERVER: Starting!\n");
     ok = TLogInit();
+    TLog("SERVER: Starting!\n");
     GPTSOCK_Init();
 
     serverSock = GPTSOCK_socket();
     GPTSOCK_bind(serverSock, 25565);
-
-    nstring16 *msg = toNotch(NOTCHTYPE_STRING16, L"Hello World!");
-
-    NotchTypePrintStr(NOTCHTYPE_STRING16, msg);
-
-    wchar *message = fromNotch(NOTCHTYPE_STRING16, msg);
-    printf("\n");
-    wprint(message);
-    printf("\n");
-    free(message);
-    NotchTypeFreeStr(NOTCHTYPE_STRING16, msg);
 
 
     return ok;
@@ -71,7 +61,7 @@ void Close() {
 int main() {
     if ( !Init() )
         return 1;
-    // Run();
+    Run();
     Close();
 
     return 0;

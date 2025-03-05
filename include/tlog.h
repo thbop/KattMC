@@ -39,11 +39,13 @@ void TLog( const char *fmt, ... ) {
     
     vprintf(fmt, args);
 
-    char message[TLOG_MAX_MSG_SIZE] = {0};
-    vsnprintf(message, TLOG_MAX_MSG_SIZE, fmt, args);
 
-    if ( _tlog_file != NULL )
+    if ( _tlog_file != NULL ) {
+        char message[TLOG_MAX_MSG_SIZE] = {0};
+        vsnprintf(message, TLOG_MAX_MSG_SIZE, fmt, args);
         fwrite(message, sizeof(char), strlen(message), _tlog_file);
+    }
+
 
     va_end(args);
 }
