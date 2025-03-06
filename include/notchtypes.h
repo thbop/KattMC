@@ -11,7 +11,6 @@
 #include "wstring.h"
 
 
-
 enum {
     NOTCHTYPE_BYTE,
     NOTCHTYPE_SHORT,
@@ -66,24 +65,24 @@ void _NotchTypeLongSwap( nlong *v ) {
 }
 
 nstring8 _NotchTypeToString8( char *str ) {
-    nstring8 str8;
+    nstring8 nstr;
     short len = strlen(str);
-    str8.len = len;
-    _NotchTypeShortSwap(&str8.len);
+    nstr.len = len;
+    _NotchTypeShortSwap(&nstr.len);
 
-    str8.buffer = (char*)malloc(len); // Do not include terminator
+    nstr.buffer = (char*)malloc(len); // Do not include terminator
 
-    memcpy(str8.buffer, str, len);
+    memcpy(nstr.buffer, str, len);
 
-    return str8;
+    return nstr;
 }
 
-char *_NotchTypeFromString8( nstring8 str8 ) {
-    if ( str8.len != 0 && str8.buffer != NULL ) {
-        short len = str8.len;
+char *_NotchTypeFromString8( nstring8 nstr ) {
+    if ( nstr.len != 0 && nstr.buffer != NULL ) {
+        short len = nstr.len;
         _NotchTypeShortSwap(&len);
         char *str = (char*)malloc(len+1);
-        memcpy(str, str8.buffer, len );
+        memcpy(str, nstr.buffer, len );
         str[len] = 0;
         
         return str;
@@ -92,34 +91,34 @@ char *_NotchTypeFromString8( nstring8 str8 ) {
 }
 
 nstring16 _NotchTypeToString16( wchar *str ) {
-    nstring16 str16;
+    nstring16 nstr;
 
     short len = wstrlen(str);
-    str16.len = len;
-    _NotchTypeShortSwap(&str16.len);
+    nstr.len = len;
+    _NotchTypeShortSwap(&nstr.len);
 
-    str16.buffer = (nshort*)malloc(str16.len * sizeof(nshort)); // Do not include terminator
+    nstr.buffer = (nshort*)malloc(nstr.len * sizeof(nshort)); // Do not include terminator
 
     // Slow manual copying... though it correctly translates to big endian
     for ( short i = 0; i < len; i++ ) {
         nshort c = str[i];
         _NotchTypeShortSwap(&c);
-        str16.buffer[i] = c;
+        nstr.buffer[i] = c;
     }
 
-    return str16;
+    return nstr;
 }
 
-wchar *_NotchTypeFromString16( nstring16 str16 ) {
-    if ( str16.len != 0 && str16.buffer != NULL ) {
-        short len = str16.len;
+wchar *_NotchTypeFromString16( nstring16 nstr ) {
+    if ( nstr.len != 0 && nstr.buffer != NULL ) {
+        short len = nstr.len;
         _NotchTypeShortSwap(&len);
 
         wchar *str = (wchar*)malloc((len + 1) * sizeof(wchar));
         
         // Slow manual copying... but it correctly converts to little endian
         for ( short i = 0; i < len; i++ ) {
-            short c = str16.buffer[i];
+            short c = nstr.buffer[i];
             _NotchTypeShortSwap(&c);
             str[i] = c;
         }
@@ -131,54 +130,54 @@ wchar *_NotchTypeFromString16( nstring16 str16 ) {
 }
 
 
-void *toNotch( int type, void *value ) {
+void *toNotch( int type, int64_t integer, double number, void *string ) {
     switch (type) {
         case NOTCHTYPE_BYTE: {
             nbyte *v = (nbyte*)malloc(sizeof(nbyte));
-            *v = *(nbyte*)value;
+            *v = integer;
             return v;
         }
         case NOTCHTYPE_SHORT: {
             nshort *v = (nshort*)malloc(sizeof(nshort));
-            *v = *(nshort*)value;
+            *v = integer;
             _NotchTypeShortSwap(v);
             return v;
         }
         case NOTCHTYPE_INT: {
             nint *v = (nint*)malloc(sizeof(nint));
-            *v = *(nint*)value;
+            *v = integer;
             _NotchTypeIntSwap(v);
             return v;
         }
         case NOTCHTYPE_LONG: {
             nlong *v = (nlong*)malloc(sizeof(nlong));
-            *v = *(nlong*)value;
+            *v = integer;
             _NotchTypeLongSwap(v);
             return v;
         }
         case NOTCHTYPE_FLOAT: {
             nfloat *v = (nfloat*)malloc(sizeof(nfloat));
-            *v = *(nfloat*)value;
+            *v = number;
             return v;
         }
         case NOTCHTYPE_DOUBLE: {
             ndouble *v = (ndouble*)malloc(sizeof(ndouble));
-            *v = *(ndouble*)value;
+            *v = number;
             return v;
         }
         case NOTCHTYPE_BOOL: {
             nbool *v = (nbool*)malloc(sizeof(nbool));
-            *v = *(nbool*)value;
+            *v = integer;
             return v;
         }
         case NOTCHTYPE_STRING8: {
             nstring8 *str = (nstring8*)malloc(sizeof(nstring8));
-            *str = _NotchTypeToString8((char*)value);
+            *str = _NotchTypeToString8((char*)string);
             return str;
         }
         case NOTCHTYPE_STRING16: {
             nstring16 *str = (nstring16*)malloc(sizeof(nstring16));
-            *str = _NotchTypeToString16((wchar*)value);
+            *str = _NotchTypeToString16((wchar*)string);
             return str;
         }
     }
@@ -190,17 +189,20 @@ void *fromNotch( int type, void *value ) {
         case NOTCHTYPE_BYTE: 
             return value;
         case NOTCHTYPE_SHORT: {
-            nshort *v = *(nshort*)value;
+            short *v = (short*)malloc(sizeof(short));
+            *v = *(short*)value;
             _NotchTypeShortSwap(v);
             return v;
         }
         case NOTCHTYPE_INT: {
-            nint *v = *(nint*)value;
+            int *v = (int*)malloc(sizeof(int));
+            *v = *(int*)value;
             _NotchTypeIntSwap(v);
             return v;
         }
         case NOTCHTYPE_LONG: {
-            nlong *v = *(nlong*)value;
+            int64_t *v = (int64_t*)malloc(sizeof(int64_t));
+            *v = *(int64_t*)value;
             _NotchTypeLongSwap(v);
             return v;
         }
@@ -235,6 +237,29 @@ void NotchTypePrintStr( int type, void *nstr ) {
             break;
         }
     }
+}
+
+size_t NotchTypeSizeOf( int type, void *value ) {
+    switch (type) {
+        case NOTCHTYPE_BYTE:     return sizeof(nbyte);
+        case NOTCHTYPE_SHORT:    return sizeof(nshort);
+        case NOTCHTYPE_INT:      return sizeof(nint);
+        case NOTCHTYPE_LONG:     return sizeof(nlong);
+        case NOTCHTYPE_BOOL:     return sizeof(nbool);
+        case NOTCHTYPE_FLOAT:    return sizeof(nfloat);
+        case NOTCHTYPE_DOUBLE:   return sizeof(ndouble);
+        case NOTCHTYPE_STRING8: {
+            short len = ((nstring8*)value)->len;
+            _NotchTypeShortSwap(&len);
+            return len + sizeof(nshort);
+        }
+        case NOTCHTYPE_STRING16: {
+            short len = ((nstring16*)value)->len;
+            _NotchTypeShortSwap(&len);
+            return (len + 1) * sizeof(nshort);
+        }
+    }
+    return 0;
 }
 
 void NotchTypeFree( int type, void *value ) {

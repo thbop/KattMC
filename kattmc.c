@@ -44,9 +44,17 @@ void Run() {
         char login[16] = { 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
         GPTSOCK_send(clientSock, login, 16);
         
+
+        PacketList list = NewPacketList();
+        PacketListAppend( &list, NOTCHTYPE_BYTE, toNotch(NOTCHTYPE_BYTE, 0xFF, 0.0, NULL) );
+        PacketListAppend( &list, NOTCHTYPE_STRING16, toNotch(NOTCHTYPE_STRING16, 0, 0.0, L"§dHello, you have been kicked by my server. Take that idiot!") );
         
-        char kick[13] = { 0xFF, 0, 5, 0, 'H', 0, 'e', 0, 'l', 0, 'l', 0, 'o' };
-        GPTSOCK_send(clientSock, kick, 13);
+        size_t kickLen;
+        char *kick = PacketEncode(&list, &kickLen);
+        GPTSOCK_send(clientSock, kick, kickLen);
+
+        free(kick);
+        PacketListFree(&list);
 
         GPTSOCK_close(clientSock);
     }
