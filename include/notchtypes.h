@@ -133,15 +133,34 @@ wchar *_NotchTypeFromString16( nstring16 str16 ) {
 
 void *toNotch( int type, void *value ) {
     switch (type) {
-        case NOTCHTYPE_SHORT:
-            _NotchTypeShortSwap((nshort*)value);
-            break;
-        case NOTCHTYPE_INT:
-            _NotchTypeIntSwap((nint*)value);
-            break;
-        case NOTCHTYPE_LONG:
-            _NotchTypeLongSwap((nlong*)value);
-            break;
+        case NOTCHTYPE_BYTE: {
+            nbyte *v = (nbyte*)malloc(sizeof(nbyte));
+            *v = *(nbyte*)value;
+            return v;
+        }
+        case NOTCHTYPE_SHORT: {
+            nshort *v = (nshort*)malloc(sizeof(nshort));
+            *v = *(nshort*)value;
+            _NotchTypeShortSwap(v);
+            return v;
+        }
+        case NOTCHTYPE_INT: {
+            nint *v = (nint*)malloc(sizeof(nint));
+            *v = *(nint*)value;
+            _NotchTypeIntSwap(v);
+            return v;
+        }
+        case NOTCHTYPE_LONG: {
+            nlong *v = (nlong*)malloc(sizeof(nlong));
+            *v = *(nlong*)value;
+            _NotchTypeLongSwap(v);
+            return v;
+        }
+        case NOTCHTYPE_BOOL: {
+            nbool *v = (nbool*)malloc(sizeof(nbool));
+            *v = *(nbool*)value;
+            return v;
+        }
         case NOTCHTYPE_STRING8: {
             nstring8 *str = (nstring8*)malloc(sizeof(nstring8));
             *str = _NotchTypeToString8((char*)value);
@@ -158,17 +177,29 @@ void *toNotch( int type, void *value ) {
 
 void *fromNotch( int type, void *value ) {
     switch (type) {
-        case NOTCHTYPE_SHORT:
-            _NotchTypeShortSwap((nshort*)value);
-            break;
-        case NOTCHTYPE_INT:
-            _NotchTypeIntSwap((nint*)value);
-            break;
-        case NOTCHTYPE_LONG:
-            _NotchTypeLongSwap((nlong*)value);
-            break;
+        case NOTCHTYPE_BYTE: 
+            return value;
+        case NOTCHTYPE_SHORT: {
+            nshort *v = *(nshort*)value;
+            _NotchTypeShortSwap(v);
+            return v;
+        }
+        case NOTCHTYPE_INT: {
+            nint *v = *(nint*)value;
+            _NotchTypeIntSwap(v);
+            return v;
+        }
+        case NOTCHTYPE_LONG: {
+            nlong *v = *(nlong*)value;
+            _NotchTypeLongSwap(v);
+            return v;
+        }
+        case NOTCHTYPE_BOOL: 
+            return value;
+
         case NOTCHTYPE_STRING8:
             return _NotchTypeFromString8(*(nstring8*)value);
+            
         case NOTCHTYPE_STRING16:
             return _NotchTypeFromString16(*(nstring16*)value);
     }
