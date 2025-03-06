@@ -37,7 +37,9 @@ PacketItem *PacketListAppend( PacketList *list, int type, void *value ) {
     }
 }
 
-void PacketListFree( PacketList *list ) {}
+void PacketListFree( PacketList *list ) {
+    
+}
 
 // Calculates the number in bytes of an encoded packet
 size_t PacketSize( PacketList *list ) {}

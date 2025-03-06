@@ -156,6 +156,16 @@ void *toNotch( int type, void *value ) {
             _NotchTypeLongSwap(v);
             return v;
         }
+        case NOTCHTYPE_FLOAT: {
+            nfloat *v = (nfloat*)malloc(sizeof(nfloat));
+            *v = *(nfloat*)value;
+            return v;
+        }
+        case NOTCHTYPE_DOUBLE: {
+            ndouble *v = (ndouble*)malloc(sizeof(ndouble));
+            *v = *(ndouble*)value;
+            return v;
+        }
         case NOTCHTYPE_BOOL: {
             nbool *v = (nbool*)malloc(sizeof(nbool));
             *v = *(nbool*)value;
@@ -195,11 +205,13 @@ void *fromNotch( int type, void *value ) {
             return v;
         }
         case NOTCHTYPE_BOOL: 
+        case NOTCHTYPE_FLOAT:
+        case NOTCHTYPE_DOUBLE:
             return value;
 
         case NOTCHTYPE_STRING8:
             return _NotchTypeFromString8(*(nstring8*)value);
-            
+
         case NOTCHTYPE_STRING16:
             return _NotchTypeFromString16(*(nstring16*)value);
     }
@@ -225,21 +237,22 @@ void NotchTypePrintStr( int type, void *nstr ) {
     }
 }
 
-void NotchTypeFreeStr( int type, void *nstr ) {
+void NotchTypeFree( int type, void *value ) {
+    if ( value == NULL ) return;
     switch (type) {
         case NOTCHTYPE_STRING8: {
-            char *buffer = ((nstring8*)nstr)->buffer;
+            char *buffer = ((nstring8*)value)->buffer;
             if ( buffer != NULL )
                 free( buffer );
             break;
         } case NOTCHTYPE_STRING16: {
-            nshort *buffer = ((nstring16*)nstr)->buffer;
+            nshort *buffer = ((nstring16*)value)->buffer;
             if ( buffer != NULL )
                 free( buffer );
             break;
         }
     }
-    free(nstr);
+    free(value);
 }
 
 #endif
