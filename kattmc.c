@@ -19,6 +19,15 @@ bool Init() {
     serverSock = GPTSOCK_socket();
     GPTSOCK_bind(serverSock, 25565);
 
+    char data[] = "Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World";
+    int compDataSize;
+    unsigned char *compData = CompressData(data, sizeof(data), &compDataSize);
+    int decompDataSize;
+    char *decompData = DecompressData(compData, compDataSize, &decompDataSize);
+    
+    printf("%s\n", decompData);
+    free(compData);
+    free(decompData);
 
     return ok;
 }
@@ -69,7 +78,7 @@ void Close() {
 int main() {
     if ( !Init() )
         return 1;
-    Run();
+    // Run();
     Close();
 
     return 0;

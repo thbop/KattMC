@@ -4,6 +4,7 @@
 // Handle packet construction
 
 #include "stdint.h"
+#include "external/rcompress.h"
 #include "packet.h"
 
 enum {
