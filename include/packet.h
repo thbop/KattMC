@@ -8,6 +8,7 @@
 #include "tlog.h"
 
 
+
 typedef struct PacketItem {
     int type;
     void *value;
@@ -114,7 +115,7 @@ size_t _PacketItemSet( char *buffer, PacketItem *item ) {
     return itemSize;
 }
 
-char *PacketEncode( PacketList *list, size_t *bufferSize ) {
+char *PacketListEncode( PacketList *list, size_t *bufferSize ) {
     *bufferSize = PacketSize(list);
     if ( *bufferSize > GPTSOCK_BUFFER_SIZE )
         // If this happens, make packet size dynamic
@@ -130,7 +131,8 @@ char *PacketEncode( PacketList *list, size_t *bufferSize ) {
     return buffer;
 }
 
-PacketList *PacketDecode( char *buffer ) {}
+// Might move to packettypes.h
+// PacketList *PacketDecode( char *buffer ) {}
 
 
 

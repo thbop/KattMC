@@ -5,6 +5,7 @@
 #include "gptsock.h"
 #include "notchtypes.h"
 #include "packet.h"
+#include "packettypes.h"
 
 
 sock_t serverSock;
@@ -34,17 +35,25 @@ void Run() {
         int len = GPTSOCK_recv(clientSock, buffer, GPTSOCK_BUFFER_SIZE);
         GPTSOCK_print(buffer, len);
 
-        char res[5] = { 2, 0, 1, 0, '-' };
-        GPTSOCK_send(clientSock, res, 5);
+        size_t handshakeLen;
+        char *handshake = PacketTypeNewHandshake(L"-", &handshakeLen);
+        GPTSOCK_send(clientSock, handshake, handshakeLen);
+        free(handshake);
 
         memset(buffer, 0, GPTSOCK_BUFFER_SIZE);
         GPTSOCK_recv(clientSock, buffer, GPTSOCK_BUFFER_SIZE);
         GPTSOCK_print(buffer, len);
 
-        char login[16] = { 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-        GPTSOCK_send(clientSock, login, 16);
-        
+        size_t loginLen;
+        char *login = PacketTypeNewLogin(1, 0, 0, &loginLen);
+        GPTSOCK_send(clientSock, login, loginLen);
+        free(login);
 
+        size_t kickLen;
+        char *kick = PacketTypeNewKick(L"§5Thou hast been kicked!", &kickLen);
+        GPTSOCK_send(clientSock, kick, kickLen);
+        free(kick);
+        
 
         GPTSOCK_close(clientSock);
     }
