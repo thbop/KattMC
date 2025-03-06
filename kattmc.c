@@ -45,21 +45,12 @@ void Run() {
         GPTSOCK_send(clientSock, login, 16);
         
 
-        PacketList list = NewPacketList();
-        PacketListAppend( &list, NOTCHTYPE_BYTE, toNotch(NOTCHTYPE_BYTE, 0xFF, 0.0, NULL) );
-        PacketListAppend( &list, NOTCHTYPE_STRING16, toNotch(NOTCHTYPE_STRING16, 0, 0.0, L"§dHello, you have been kicked by my server. Take that idiot!") );
-        
-        size_t kickLen;
-        char *kick = PacketEncode(&list, &kickLen);
-        GPTSOCK_send(clientSock, kick, kickLen);
-
-        free(kick);
-        PacketListFree(&list);
 
         GPTSOCK_close(clientSock);
     }
     GPTSOCK_close(serverSock);
 }
+
 
 void Close() {
     TLogClose();
