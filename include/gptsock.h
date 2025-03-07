@@ -70,9 +70,9 @@ int GPTSOCK_listen(sock_t sock, int backlog) {
 
 sock_t GPTSOCK_accept(sock_t sock) {
     struct sockaddr_in client;
-    int client_size = sizeof(client);
+    int clientSize = sizeof(client);
 
-    sock_t clientSock = accept(sock, (struct sockaddr*)&client, &client_size);
+    sock_t clientSock = accept(sock, (struct sockaddr*)&client, &clientSize);
     if ( sock == INVALID_SOCKET ) {
         TLog("GPTSOCK ERROR: Failed to accept client!\n");
         GPTSOCK_Clean();
