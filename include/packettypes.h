@@ -4,7 +4,11 @@
 // Handle packet construction
 
 #include "stdint.h"
+
+#include "wstring.h"
 #include "external/rcompress.h"
+
+#include "constants.h"
 #include "packet.h"
 
 enum {
@@ -50,12 +54,41 @@ char *PacketTypeNewKick( wchar *reason, size_t *bufferSize ) {
     return buffer;
 }
 
-PacketList *_PacketTypeDecodeHandshake( char *buffer, int bufferSize ) {
+
+#define PACKETTYPE_MINLOGINSIZE     16
+#define PACKETTYPE_MAXLOGINSIZE     (PACKETTYPE_MINLOGINSIZE+MAXUSERNAMESIZE)
+#define PACKETTYPE_MINHANDSHAKESIZE 3
+#define PACKETTYPE_MAXHANDSHAKESIZE (PACKETTYPE_MINHANDSHAKESIZE+MAXUSERNAMESIZE)
+
+PacketList *_PacketTypeDecodeLogin( char *buffer, int bufferSize ) {
+    if ( bufferSize < PACKETTYPE_MINLOGINSIZE || bufferSize > PACKETTYPE_MAXLOGINSIZE ) {
+        TLog("WARNING: Invalid login packet!\n");
+        return NULL;
+    }
+
     PacketList *list = NewPacketList(false);
     int x = 0;
 
-    PLA_RByte(list, *buffer); x += sizeof(nbyte);
-    PLA_WStringFromBuffer(list, buffer+x);
+    PLA_NByte(list, *buffer);              x += sizeof(nbyte);                            // Packet type
+    PLA_NInt(list, *(int*)(buffer+x));     x += sizeof(nint);                             // Protocol version
+    PLA_WStringFromBuffer(list, buffer+x); x += wstrlen(list->tail->value)+sizeof(wchar); // Username
+    // There are two other meaningless values that I'll ignore                            // Seed
+                                                                                          // Dimension
+
+    return list;
+}
+
+PacketList *_PacketTypeDecodeHandshake( char *buffer, int bufferSize ) {
+    if ( bufferSize < PACKETTYPE_MINHANDSHAKESIZE || bufferSize > PACKETTYPE_MAXHANDSHAKESIZE ) {
+        TLog("WARNING: Invalid handshake packet!\n");
+        return NULL;
+    }
+
+    PacketList *list = NewPacketList(false);
+    int x = 0;
+
+    PLA_RByte(list, *buffer); x += sizeof(nbyte); // Packet type
+    PLA_WStringFromBuffer(list, buffer+x);        // Username
 
     return list;
 }
@@ -64,7 +97,7 @@ PacketList *PacketDecode( char *buffer, int bufferSize ) {
     nbyte type = *buffer; // The type should be the first byte in the buffer
     switch (type) {
         case PACKETTYPE_KEEPALIVE: break;
-        case PACKETTYPE_LOGIN:     break;
+        case PACKETTYPE_LOGIN:     return _PacketTypeDecodeLogin(buffer, bufferSize);
         case PACKETTYPE_HANDSHAKE: return _PacketTypeDecodeHandshake(buffer, bufferSize);
     }
 

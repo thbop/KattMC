@@ -34,13 +34,6 @@ void Run() {
         char buffer[GPTSOCK_BUFFER_SIZE] = {0};
 
         int len = GPTSOCK_recv(clientSock, buffer, GPTSOCK_BUFFER_SIZE);
-        // GPTSOCK_print(buffer, len);
-        PacketList *clientHandshake = PacketDecode(buffer, len);
-        char username[17];
-        wcstombs(username, clientHandshake->tail->value, 16);
-        TLog("SERVER: Handshake from \"%s\"!\n", username);
-
-        PacketListFree(clientHandshake);
 
         size_t handshakeLen;
         char *handshake = PacketTypeNewHandshake(L"-", &handshakeLen);
@@ -49,7 +42,13 @@ void Run() {
 
         memset(buffer, 0, GPTSOCK_BUFFER_SIZE);
         len = GPTSOCK_recv(clientSock, buffer, GPTSOCK_BUFFER_SIZE);
-        GPTSOCK_print(buffer, len);
+        PacketList *clientLogin = PacketDecode(buffer, len);
+        int version = *(int*)((PacketItem*)clientLogin->tail->prev)->value;
+        char username[MAXUSERNAMELEN+1] = {0};
+        wcstombs(username, clientLogin->tail->value, MAXUSERNAMELEN);
+        TLog("SERVER: User %s connected with protocol version %d.\n", username, version);
+
+        PacketListFree(clientLogin);
 
         size_t loginLen;
         char *login = PacketTypeNewLogin(1, 0, 0, &loginLen);
