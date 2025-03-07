@@ -19,15 +19,6 @@ bool Init() {
     serverSock = GPTSOCK_socket();
     GPTSOCK_bind(serverSock, 25565);
 
-    char data[] = "Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World";
-    int compDataSize;
-    unsigned char *compData = CompressData(data, sizeof(data), &compDataSize);
-    int decompDataSize;
-    char *decompData = DecompressData(compData, compDataSize, &decompDataSize);
-    
-    printf("%s\n", decompData);
-    free(compData);
-    free(decompData);
 
     return ok;
 }
@@ -41,8 +32,15 @@ void Run() {
     sock_t clientSock = GPTSOCK_accept(serverSock);
     if ( clientSock != INVALID_SOCKET ) {
         char buffer[GPTSOCK_BUFFER_SIZE] = {0};
+
         int len = GPTSOCK_recv(clientSock, buffer, GPTSOCK_BUFFER_SIZE);
-        GPTSOCK_print(buffer, len);
+        // GPTSOCK_print(buffer, len);
+        PacketList *clientHandshake = PacketDecode(buffer, len);
+        char username[17];
+        wcstombs(username, clientHandshake->tail->value, 16);
+        TLog("SERVER: Handshake from \"%s\"!\n", username);
+
+        PacketListFree(clientHandshake);
 
         size_t handshakeLen;
         char *handshake = PacketTypeNewHandshake(L"-", &handshakeLen);
@@ -50,7 +48,7 @@ void Run() {
         free(handshake);
 
         memset(buffer, 0, GPTSOCK_BUFFER_SIZE);
-        GPTSOCK_recv(clientSock, buffer, GPTSOCK_BUFFER_SIZE);
+        len = GPTSOCK_recv(clientSock, buffer, GPTSOCK_BUFFER_SIZE);
         GPTSOCK_print(buffer, len);
 
         size_t loginLen;
@@ -78,7 +76,7 @@ void Close() {
 int main() {
     if ( !Init() )
         return 1;
-    // Run();
+    Run();
     Close();
 
     return 0;

@@ -17,13 +17,21 @@ typedef struct PacketItem {
 
 typedef struct PacketList {
     PacketItem *head, *tail;
+    bool notchMode;
 } PacketList;
 
 #define PacketListForEach(list, it) \
     for ( PacketItem *it = list->head; it != NULL; it = it->next )
 
-PacketList NewPacketList() {
-    return (PacketList){NULL, NULL};
+
+PacketList *NewPacketList(bool notchMode) {
+    PacketList *list = (PacketList*)malloc(sizeof(PacketList));
+    *list = (PacketList){
+        .head      = NULL,
+        .tail      = NULL,
+        .notchMode = notchMode,
+    };
+    return list;
 }
 
 PacketItem *PacketListAppend( PacketList *list, int type, void *value ) {
@@ -45,43 +53,93 @@ PacketItem *PacketListAppend( PacketList *list, int type, void *value ) {
 }
 
 // Packet List Append Shorthands:
-#define PLA_Byte(list, value) \
-    PacketListAppend( &list, NOTCHTYPE_BYTE, toNotch(NOTCHTYPE_BYTE, value, 0.0, NULL) )
+// Notch Appends
+#define PLA_NByte(list, value) \
+    PacketListAppend( list, NOTCHTYPE_BYTE, toNotch(NOTCHTYPE_BYTE, value, 0.0, NULL) )
 
-#define PLA_Short(list, value) \
-    PacketListAppend( &list, NOTCHTYPE_SHORT, toNotch(NOTCHTYPE_SHORT, value, 0.0, NULL) )
+#define PLA_NShort(list, value) \
+    PacketListAppend( list, NOTCHTYPE_SHORT, toNotch(NOTCHTYPE_SHORT, value, 0.0, NULL) )
 
-#define PLA_Int(list, value) \
-    PacketListAppend( &list, NOTCHTYPE_INT, toNotch(NOTCHTYPE_INT, value, 0.0, NULL) )
+#define PLA_NInt(list, value) \
+    PacketListAppend( list, NOTCHTYPE_INT, toNotch(NOTCHTYPE_INT, value, 0.0, NULL) )
 
-#define PLA_Long(list, value) \
-    PacketListAppend( &list, NOTCHTYPE_LONG, toNotch(NOTCHTYPE_LONG, value, 0.0, NULL) )
+#define PLA_NLong(list, value) \
+    PacketListAppend( list, NOTCHTYPE_LONG, toNotch(NOTCHTYPE_LONG, value, 0.0, NULL) )
 
-#define PLA_Float(list, value) \
-    PacketListAppend( &list, NOTCHTYPE_FLOAT, toNotch(NOTCHTYPE_FLOAT, 0, value, NULL) )
+#define PLA_NFloat(list, value) \
+    PacketListAppend( list, NOTCHTYPE_FLOAT, toNotch(NOTCHTYPE_FLOAT, 0, value, NULL) )
 
-#define PLA_Double(list, value) \
-    PacketListAppend( &list, NOTCHTYPE_DOUBLE, toNotch(NOTCHTYPE_DOUBLE, 0, value, NULL) )
+#define PLA_NDouble(list, value) \
+    PacketListAppend( list, NOTCHTYPE_DOUBLE, toNotch(NOTCHTYPE_DOUBLE, 0, value, NULL) )
 
-#define PLA_Bool(list, value) \
-    PacketListAppend( &list, NOTCHTYPE_DOUBLE, toNotch(NOTCHTYPE_DOUBLE, value, 0.0, NULL) )
+#define PLA_NBool(list, value) \
+    PacketListAppend( list, NOTCHTYPE_BOOL, toNotch(NOTCHTYPE_BOOL, value, 0.0, NULL) )
 
-#define PLA_String8(list, value) \
-    PacketListAppend( &list, NOTCHTYPE_STRING8, toNotch(NOTCHTYPE_STRING8, 0, 0.0, value) )
+#define PLA_NString8(list, value) \
+    PacketListAppend( list, NOTCHTYPE_STRING8, toNotch(NOTCHTYPE_STRING8, 0, 0.0, value) )
 
-#define PLA_String16(list, value) \
-    PacketListAppend( &list, NOTCHTYPE_STRING16, toNotch(NOTCHTYPE_STRING16, 0, 0.0, value) )
+#define PLA_NString16(list, value) \
+    PacketListAppend( list, NOTCHTYPE_STRING16, toNotch(NOTCHTYPE_STRING16, 0, 0.0, value) )
+
+// Regular appends (which is not confusing at all)
+#define PLA_RByte(list, value) \
+    PacketListAppend( list, REG_BYTE, regAlloc(REG_BYTE, value, 0.0, NULL) )
+
+#define PLA_RShort(list, value) \
+    PacketListAppend( list, REG_SHORT, regAlloc(REG_SHORT, value, 0.0, NULL) )
+
+#define PLA_RInt(list, value) \
+    PacketListAppend( list, REG_INT, regAlloc(REG_INT, value, 0.0, NULL) )
+
+#define PLA_RLong(list, value) \
+    PacketListAppend( list, REG_LONG, regAlloc(REG_LONG, value, 0.0, NULL) )
+
+#define PLA_RFloat(list, value) \
+    PacketListAppend( list, REG_FLOAT, regAlloc(REG_FLOAT, 0, value, NULL) )
+
+#define PLA_RDouble(list, value) \
+    PacketListAppend( list, REG_DOUBLE, regAlloc(REG_DOUBLE, 0, value, NULL) )
+
+#define PLA_RBool(list, value) \
+    PacketListAppend( list, REG_BOOL, regAlloc(REG_BOOL, value, 0.0, NULL) )
+
+// Probably never use these tbh
+#define PLA_RString(list, value) \
+    PacketListAppend( list, REG_STRING, regAlloc(REG_STRING, 0, 0.0, value) )
+
+#define PLA_RWString(list, value) \
+    PacketListAppend( list, REG_WSTRING, regAlloc(REG_WSTRING, 0, 0.0, value) )
+
+
+PacketItem *PLA_StringFromBuffer( PacketList* list, char *buffer ) {
+    nstring8 *nstr = NotchTypeStrFromBuffer(NOTCHTYPE_STRING8, buffer);
+    PacketItem *item = PacketListAppend( list, REG_STRING, fromNotch(NOTCHTYPE_STRING8, nstr) );
+    free(nstr);
+    return item;
+}
+
+PacketItem *PLA_WStringFromBuffer( PacketList* list, char *buffer ) {
+    nstring16 *nstr = NotchTypeStrFromBuffer(NOTCHTYPE_STRING16, buffer);
+    PacketItem *item = PacketListAppend( list, REG_WSTRING, fromNotch(NOTCHTYPE_STRING16, nstr) );
+    free(nstr);
+    return item;
+}
 
 
 void PacketListFree( PacketList *list ) {
+    if ( list == NULL ) return;
+
     PacketItem *item = list->head;
     PacketItem *n;
     while ( item != NULL ) {
         n = item->next;
-        NotchTypeFree(item->type, item->value);
+        if ( list->notchMode ) NotchTypeFree(item->type, item->value);
+        else                   free(item->value);
+
         free(item);
         item = n;
     }
+    free(list);
 }
 
 

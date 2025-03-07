@@ -23,6 +23,19 @@ enum {
     NOTCHTYPE_STRING16,
 };
 
+// Regular counterparts
+enum {
+    REG_BYTE,
+    REG_SHORT,
+    REG_INT,
+    REG_LONG,
+    REG_FLOAT,
+    REG_DOUBLE,
+    REG_BOOL,
+    REG_STRING,
+    REG_WSTRING,
+};
+
 
 // Everything is little endian
 typedef int8_t  nbyte;
@@ -77,12 +90,12 @@ nstring8 _NotchTypeToString8( char *str ) {
     return nstr;
 }
 
-char *_NotchTypeFromString8( nstring8 nstr ) {
-    if ( nstr.len != 0 && nstr.buffer != NULL ) {
-        short len = nstr.len;
+char *_NotchTypeFromString8( nstring8 *nstr ) {
+    if ( nstr->len != 0 && nstr->buffer != NULL ) {
+        short len = nstr->len;
         _NotchTypeShortSwap(&len);
         char *str = (char*)malloc(len+1);
-        memcpy(str, nstr.buffer, len );
+        memcpy(str, nstr->buffer, len );
         str[len] = 0;
         
         return str;
@@ -109,22 +122,75 @@ nstring16 _NotchTypeToString16( wchar *str ) {
     return nstr;
 }
 
-wchar *_NotchTypeFromString16( nstring16 nstr ) {
-    if ( nstr.len != 0 && nstr.buffer != NULL ) {
-        short len = nstr.len;
+wchar *_NotchTypeFromString16( nstring16 *nstr ) {
+    if ( nstr->len != 0 && nstr->buffer != NULL ) {
+        short len = nstr->len;
         _NotchTypeShortSwap(&len);
 
         wchar *str = (wchar*)malloc((len + 1) * sizeof(wchar));
         
         // Slow manual copying... but it correctly converts to little endian
         for ( short i = 0; i < len; i++ ) {
-            short c = nstr.buffer[i];
+            short c = nstr->buffer[i];
             _NotchTypeShortSwap(&c);
             str[i] = c;
         }
         str[len] = 0;
         
         return str;
+    }
+    return NULL;
+}
+
+void *regAlloc( int type, int64_t integer, double number, void *string ) {
+    switch (type) {
+        case REG_BYTE: {
+            nbyte *v = (nbyte*)malloc(sizeof(nbyte));
+            *v = integer;
+            return v;
+        }
+        case REG_SHORT: {
+            nshort *v = (nshort*)malloc(sizeof(nshort));
+            *v = integer;
+            return v;
+        }
+        case REG_INT: {
+            nint *v = (nint*)malloc(sizeof(nint));
+            *v = integer;
+            return v;
+        }
+        case REG_LONG: {
+            nlong *v = (nlong*)malloc(sizeof(nlong));
+            *v = integer;
+            return v;
+        }
+        case REG_FLOAT: {
+            nfloat *v = (nfloat*)malloc(sizeof(nfloat));
+            *v = number;
+            return v;
+        }
+        case REG_DOUBLE: {
+            ndouble *v = (ndouble*)malloc(sizeof(ndouble));
+            *v = number;
+            return v;
+        }
+        case REG_BOOL: {
+            nbool *v = (nbool*)malloc(sizeof(nbool));
+            *v = integer;
+            return v;
+        }
+        case REG_STRING: {
+            size_t strSize = strlen(string)+1;
+            char *str = (char*)malloc(strSize);
+            memcpy(str, string, strSize);
+            return str;
+        }
+        case REG_WSTRING: {
+            size_t strSize = (strlen(string)+1)*sizeof(short);
+            wchar *str = (wchar*)malloc(strSize);
+            memcpy(str, string, strSize);
+            return str;
+        }
     }
     return NULL;
 }
@@ -212,10 +278,31 @@ void *fromNotch( int type, void *value ) {
             return value;
 
         case NOTCHTYPE_STRING8:
-            return _NotchTypeFromString8(*(nstring8*)value);
+            return _NotchTypeFromString8(value);
 
         case NOTCHTYPE_STRING16:
-            return _NotchTypeFromString16(*(nstring16*)value);
+            return _NotchTypeFromString16(value);
+    }
+    return NULL;
+}
+
+// DO NOT use NotchTypeFree on these strings!!!
+// Use free instead
+void *NotchTypeStrFromBuffer( int type, void *buffer ) {
+    nshort len = *(nshort*)buffer;
+    switch (type) {
+        case NOTCHTYPE_STRING8: {
+            nstring8 *nstr = (nstring8*)malloc(sizeof(nstring8));
+            nstr->len = len;
+            nstr->buffer = (char*)buffer + 2;
+            return nstr;
+        }
+        case NOTCHTYPE_STRING16: {
+            nstring16 *nstr = (nstring16*)malloc(sizeof(nstring16));
+            nstr->len = len;
+            nstr->buffer = (nshort*)buffer + 1;
+            return nstr;
+        }
     }
     return NULL;
 }
@@ -223,12 +310,12 @@ void *fromNotch( int type, void *value ) {
 void NotchTypePrintStr( int type, void *nstr ) {
     switch (type) {
         case NOTCHTYPE_STRING8: {
-            char *str = _NotchTypeFromString8(*(nstring8*)nstr);
+            char *str = _NotchTypeFromString8(nstr);
             printf("String8(\"%s\")", str);
             free(str);
             break;
         } case NOTCHTYPE_STRING16: {
-            wchar *str = _NotchTypeFromString16(*(nstring16*)nstr);
+            wchar *str = _NotchTypeFromString16(nstr);
             printf("String16(\"");
             wprint(str);
             printf("\")");
