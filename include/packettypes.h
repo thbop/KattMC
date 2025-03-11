@@ -55,13 +55,13 @@ char *PacketTypeNewKick( wchar *reason, size_t *bufferSize ) {
 }
 
 
-#define PACKETTYPE_MINLOGINSIZE     16
-#define PACKETTYPE_MAXLOGINSIZE     (PACKETTYPE_MINLOGINSIZE+MAXUSERNAMESIZE)
-#define PACKETTYPE_MINHANDSHAKESIZE 3
-#define PACKETTYPE_MAXHANDSHAKESIZE (PACKETTYPE_MINHANDSHAKESIZE+MAXUSERNAMESIZE)
+#define PACKETTYPE_MIN_LOGIN_SIZE     16
+#define PACKETTYPE_MAX_LOGIN_SIZE     (PACKETTYPE_MIN_LOGIN_SIZE+MAX_USERNAME_SIZE)
+#define PACKETTYPE_MIN_HANDSHAKE_SIZE 3
+#define PACKETTYPE_MAX_HANDSHAKE_SIZE (PACKETTYPE_MIN_HANDSHAKE_SIZE+MAX_USERNAME_SIZE)
 
 PacketList *_PacketTypeDecodeLogin( char *buffer, int bufferSize ) {
-    if ( bufferSize < PACKETTYPE_MINLOGINSIZE || bufferSize > PACKETTYPE_MAXLOGINSIZE ) {
+    if ( bufferSize < PACKETTYPE_MIN_LOGIN_SIZE || bufferSize > PACKETTYPE_MAX_LOGIN_SIZE ) {
         TLog("WARNING: Invalid login packet!\n");
         return NULL;
     }
@@ -79,7 +79,7 @@ PacketList *_PacketTypeDecodeLogin( char *buffer, int bufferSize ) {
 }
 
 PacketList *_PacketTypeDecodeHandshake( char *buffer, int bufferSize ) {
-    if ( bufferSize < PACKETTYPE_MINHANDSHAKESIZE || bufferSize > PACKETTYPE_MAXHANDSHAKESIZE ) {
+    if ( bufferSize < PACKETTYPE_MIN_HANDSHAKE_SIZE || bufferSize > PACKETTYPE_MAX_HANDSHAKE_SIZE ) {
         TLog("WARNING: Invalid handshake packet!\n");
         return NULL;
     }

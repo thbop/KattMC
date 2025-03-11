@@ -126,6 +126,15 @@ PacketItem *PLA_WStringFromBuffer( PacketList* list, char *buffer ) {
 }
 
 
+PacketItem *PL_At( PacketList *list, int index ) {
+    PacketListForEach(list, item) {
+        if ( index == 0 ) return item;
+        index--;
+    }
+
+    return NULL;
+}
+
 void PacketListFree( PacketList *list ) {
     if ( list == NULL ) return;
 

@@ -13,10 +13,12 @@ bool Init() {
     bool ok = true;
     ok = TLogInit();
     TLog("SERVER: Starting!\n");
-    GPTSOCK_Init();
+    GPTSockInit();
 
-    serverSock = GPTSOCK_socket();
-    GPTSOCK_bind(serverSock, 25565);
+    serverSock = NewGPTSocket();
+    GPTSockBind(serverSock, 25565);
+
+    ClientHandlerInit();
 
 
     return ok;
@@ -25,18 +27,21 @@ bool Init() {
 void Run() {
     bool running = true;
     while (running) {
-        GPTSOCK_listen(serverSock, 1);
-        sock_t clientSock = GPTSOCK_accept(serverSock);
+        GPTSockListen(serverSock, 1);
+        sock_t clientSock = GPTSockAccept(serverSock);
+        TLog("SERVER: New connection!\n");
         pthread_t ptid;
-        pthread_create(&ptid, NULL, &clientHandler, &clientSock);
+        pthread_create(&ptid, NULL, &ClientHandlerMain, &clientSock);
         pthread_detach(ptid);
 
     }
-    GPTSOCK_close(serverSock);
+    GPTSockClose(serverSock);
 }
 
 
 void Close() {
+    ClientHandlerUnload();
+    GPTSockClean();
     TLogClose();
 }
 
